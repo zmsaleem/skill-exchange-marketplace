@@ -1,0 +1,106 @@
+.booking-card {
+  background: var(--bg-card);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--border);
+  border-left: 4px solid var(--border);
+  overflow: hidden;
+  transition: box-shadow var(--transition);
+}
+
+.booking-card:hover { box-shadow: var(--shadow); }
+
+.booking-card--pending  { border-left-color: var(--warning); }
+.booking-card--accepted { border-left-color: var(--secondary); }
+.booking-card--rejected { border-left-color: var(--danger); }
+.booking-card--completed { border-left-color: var(--info); }
+
+.booking-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 1rem 1.25rem 0.5rem;
+}
+
+.booking-skill {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.2rem 0.65rem;
+  border-radius: var(--radius-full);
+  font-size: 0.75rem;
+  font-weight: 700;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.status-pending  { background: rgba(245,158,11,0.12); color: #b45309; }
+.status-accepted { background: rgba(16,185,129,0.12); color: #065f46; }
+.status-rejected { background: rgba(239,68,68,0.12);  color: #b91c1c; }
+.status-completed { background: rgba(59,130,246,0.12); color: #1e40af; }
+
+.booking-card-body {
+  padding: 0.5rem 1.25rem 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.booking-card-body p {
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+}
+
+.booking-card-body p strong {
+  color: var(--text-primary);
+}
+
+.booking-card-actions {
+  display: flex;
+  gap: 0.5rem;
+  padding: 0.75rem 1.25rem;
+  border-top: 1px solid var(--border);
+  background: var(--bg-secondary);
+}
+
+.btn-accept,
+.btn-reject,
+.btn-complete {
+  padding: 0.4rem 1rem;
+  border-radius: var(--radius);
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  border: none;
+  transition: all var(--transition);
+}
+
+.btn-accept {
+  background: var(--secondary);
+  color: #fff;
+}
+.btn-accept:hover { background: var(--secondary-dark); }
+
+.btn-reject {
+  background: transparent;
+  color: var(--danger);
+  border: 1.5px solid var(--danger);
+}
+.btn-reject:hover { background: var(--danger); color: #fff; }
+
+.btn-complete {
+  background: var(--info);
+  color: #fff;
+}
+.btn-complete:hover { background: #2563eb; }

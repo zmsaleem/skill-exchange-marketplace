@@ -1,0 +1,5 @@
+/* Reuse auth-page, auth-card, auth-header, auth-title, auth-subtitle, auth-footer-text from Login.css */
+/* Register-specific overrides */
+.register-card {
+  max-width: 480px;
+}
