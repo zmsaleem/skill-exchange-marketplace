@@ -11,6 +11,7 @@ import Register from './pages/Register/Register';
 import BrowseSkills from './pages/BrowseSkills/BrowseSkills';
 import SkillDetails from './pages/SkillDetails/SkillDetails';
 import Dashboard from './pages/Dashboard/Dashboard';
+import AdminDashboard from './pages/AdminDashboard/AdminDashboard';
 import CreateSkill from './pages/CreateSkill/CreateSkill';
 import EditSkill from './pages/EditSkill/EditSkill';
 import Profile from './pages/Profile/Profile';
@@ -38,6 +39,14 @@ function App() {
                 element={
                   <ProtectedRoute>
                     <Dashboard />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/admin"
+                element={
+                  <ProtectedRoute allowedRoles={['admin']}>
+                    <AdminDashboard />
                   </ProtectedRoute>
                 }
               />

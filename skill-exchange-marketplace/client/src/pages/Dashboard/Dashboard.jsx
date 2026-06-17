@@ -4,7 +4,7 @@ import { useAuth } from '../../hooks/useAuth';
 import BookingCard from '../../components/BookingCard/BookingCard';
 import Loader from '../../components/Loader/Loader';
 import { getMySkills, deleteSkill } from '../../api/skillApi';
-import { getMyBookings } from '../../api/bookingApi';
+import { getMyBookings, updateBookingStatus } from '../../api/bookingApi';
 import './Dashboard.css';
 
 const Dashboard = () => {
@@ -80,6 +80,43 @@ const Dashboard = () => {
         </div>
 
         <div className="dashboard-grid">
+          {/* Instructor / Admin Panel */}
+          {(user?.role === 'instructor' || user?.role === 'both') && (
+            <section className="dashboard-section">
+              <div className="section-top">
+                <h2 className="dashboard-section-title">Instructor Panel</h2>
+                <Link to="/bookings" className="btn btn-ghost btn-sm">
+                  Manage Bookings →
+                </Link>
+              </div>
+
+              {loadingBookings ? (
+                <Loader size="sm" />
+              ) : (
+                <div className="bookings-list">
+                  {bookings
+                    .filter((b) => b.instructor?._id === user?._id || b.instructor === user?._id)
+                    .slice(0, 6)
+                    .map((booking) => (
+                      <BookingCard
+                        key={booking._id}
+                        booking={booking}
+                        currentUserId={user?._id}
+                        onStatusUpdate={async (id, status) => {
+                          try {
+                            const updated = await updateBookingStatus(id, status);
+                            setBookings((prev) => prev.map((p) => (p._id === id ? updated : p)));
+                          } catch (e) {
+                            // ignore here; Bookings page shows errors
+                          }
+                        }}
+                      />
+                    ))}
+                </div>
+              )}
+            </section>
+          )}
+
           {/* My Skills */}
           <section className="dashboard-section">
             <div className="section-top">

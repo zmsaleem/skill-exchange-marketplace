@@ -12,10 +12,10 @@ export const register = async (name, email, password, role) => {
 
 export const getMe = async () => {
   const { data } = await axiosInstance.get('/auth/me');
-  return data;
+  return data.user;
 };
 
 export const updateProfile = async (profileData) => {
   const { data } = await axiosInstance.put('/users/profile', profileData);
-  return data;
+  return data.user;
 };

@@ -5,22 +5,22 @@ export const getSkills = async (search = '', category = '') => {
   if (search) params.search = search;
   if (category) params.category = category;
   const { data } = await axiosInstance.get('/skills', { params });
-  return data;
+  return data.skills || [];
 };
 
 export const getSkillById = async (id) => {
   const { data } = await axiosInstance.get(`/skills/${id}`);
-  return data;
+  return data.skill;
 };
 
 export const createSkill = async (skillData) => {
   const { data } = await axiosInstance.post('/skills', skillData);
-  return data;
+  return data.skill;
 };
 
 export const updateSkill = async (id, skillData) => {
   const { data } = await axiosInstance.put(`/skills/${id}`, skillData);
-  return data;
+  return data.skill;
 };
 
 export const deleteSkill = async (id) => {
@@ -30,5 +30,5 @@ export const deleteSkill = async (id) => {
 
 export const getMySkills = async () => {
   const { data } = await axiosInstance.get('/skills/my-skills');
-  return data;
+  return data.skills || [];
 };

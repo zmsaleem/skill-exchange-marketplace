@@ -1,8 +1,21 @@
 const crypto = require('crypto');
-const User = require('../models/User');
+const bcrypt = require('bcryptjs');
 const asyncHandler = require('../utils/asyncHandler');
 const generateToken = require('../utils/generateToken');
 const { sendEmail } = require('../utils/sendEmail');
+const { prisma } = require('../config/db');
+
+const formatUser = (user) => ({
+  _id: user.id,
+  name: user.name,
+  email: user.email,
+  role: user.role,
+  bio: user.bio,
+  profilePicture: user.profilePicture,
+  skillsToTeach: user.skillsToTeach,
+  createdAt: user.createdAt,
+  updatedAt: user.updatedAt,
+});
 
 /**
  * @desc    Register a new user
@@ -12,21 +25,33 @@ const { sendEmail } = require('../utils/sendEmail');
 const registerUser = asyncHandler(async (req, res) => {
   const { name, email, password, role } = req.body;
 
-  const existingUser = await User.findOne({ email: String(email) });
+  const normalizedEmail = String(email).toLowerCase();
+  const existingUser = await prisma.user.findUnique({
+    where: { email: normalizedEmail },
+  });
+
   if (existingUser) {
     res.status(400);
     throw new Error('User with that email already exists');
   }
 
-  const user = await User.create({ name, email, password, role });
+  const hashedPassword = await bcrypt.hash(password, 10);
+  const user = await prisma.user.create({
+    data: {
+      name,
+      email: normalizedEmail,
+      password: hashedPassword,
+      role: role || 'both',
+    },
+  });
 
   res.status(201).json({
     success: true,
-    _id: user._id,
+    _id: user.id,
     name: user.name,
     email: user.email,
     role: user.role,
-    token: generateToken(user._id),
+    token: generateToken(user.id),
   });
 });
 
@@ -37,23 +62,27 @@ const registerUser = asyncHandler(async (req, res) => {
  */
 const loginUser = asyncHandler(async (req, res) => {
   const { email, password } = req.body;
+  const normalizedEmail = String(email).toLowerCase();
 
-  const user = await User.findOne({ email: String(email) });
+  const user = await prisma.user.findUnique({
+    where: { email: normalizedEmail },
+  });
 
-  if (!user || !(await user.matchPassword(password))) {
+  if (!user || !(await bcrypt.compare(password, user.password))) {
     res.status(401);
     throw new Error('Invalid email or password');
   }
 
   res.status(200).json({
     success: true,
-    _id: user._id,
+    _id: user.id,
     name: user.name,
     email: user.email,
     role: user.role,
     bio: user.bio,
     profilePicture: user.profilePicture,
-    token: generateToken(user._id),
+    skillsToTeach: user.skillsToTeach,
+    token: generateToken(user.id),
   });
 });
 
@@ -63,8 +92,27 @@ const loginUser = asyncHandler(async (req, res) => {
  * @access  Private
  */
 const getMe = asyncHandler(async (req, res) => {
-  const user = await User.findById(req.user._id).select('-password');
-  res.status(200).json({ success: true, user });
+  const user = await prisma.user.findUnique({
+    where: { id: Number(req.user._id) },
+    select: {
+      id: true,
+      name: true,
+      email: true,
+      role: true,
+      bio: true,
+      profilePicture: true,
+      skillsToTeach: true,
+      createdAt: true,
+      updatedAt: true,
+    },
+  });
+
+  if (!user) {
+    res.status(404);
+    throw new Error('User not found');
+  }
+
+  res.status(200).json({ success: true, user: formatUser(user) });
 });
 
 /**
@@ -74,13 +122,20 @@ const getMe = asyncHandler(async (req, res) => {
  */
 const forgotPassword = asyncHandler(async (req, res) => {
   const { email } = req.body;
-  const user = await User.findOne({ email: String(email) });
+  const normalizedEmail = String(email).toLowerCase();
+  const user = await prisma.user.findUnique({
+    where: { email: normalizedEmail },
+  });
 
   if (user) {
     const token = crypto.randomBytes(32).toString('hex');
-    user.resetToken = token;
-    user.resetTokenExpiry = Date.now() + 3600000; // 1 hour
-    await user.save({ validateBeforeSave: false });
+    await prisma.user.update({
+      where: { id: user.id },
+      data: {
+        resetToken: token,
+        resetTokenExpiry: new Date(Date.now() + 3600000),
+      },
+    });
 
     const resetUrl = `${process.env.CLIENT_URL}/reset-password?token=${token}`;
 
@@ -108,7 +163,6 @@ const forgotPassword = asyncHandler(async (req, res) => {
     );
   }
 
-  // Always return the same response — never reveal if email exists
   res.status(200).json({ message: 'If this email exists, a reset link was sent.' });
 });
 
@@ -120,9 +174,11 @@ const forgotPassword = asyncHandler(async (req, res) => {
 const resetPassword = asyncHandler(async (req, res) => {
   const { token, newPassword } = req.body;
 
-  const user = await User.findOne({
-    resetToken: token,
-    resetTokenExpiry: { $gt: Date.now() },
+  const user = await prisma.user.findFirst({
+    where: {
+      resetToken: token,
+      resetTokenExpiry: { gt: new Date() },
+    },
   });
 
   if (!user) {
@@ -130,10 +186,15 @@ const resetPassword = asyncHandler(async (req, res) => {
     throw new Error('Invalid or expired reset link. Please request a new one.');
   }
 
-  user.password = newPassword; // pre-save hook in User.js will hash it
-  user.resetToken = undefined;
-  user.resetTokenExpiry = undefined;
-  await user.save();
+  const hashedPassword = await bcrypt.hash(newPassword, 10);
+  await prisma.user.update({
+    where: { id: user.id },
+    data: {
+      password: hashedPassword,
+      resetToken: null,
+      resetTokenExpiry: null,
+    },
+  });
 
   res.status(200).json({ message: 'Password updated successfully.' });
 });

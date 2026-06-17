@@ -48,6 +48,11 @@ const Navbar = () => {
                 <NavLink to="/dashboard" className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'} onClick={closeMenu}>
                   Dashboard
                 </NavLink>
+                {user?.role === 'admin' && (
+                  <NavLink to="/admin" className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'} onClick={closeMenu}>
+                    Admin
+                  </NavLink>
+                )}
                 <NavLink to="/bookings" className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'} onClick={closeMenu}>
                   Bookings
                 </NavLink>
